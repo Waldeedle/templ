@@ -6,15 +6,25 @@ import (
 	"github.com/a-h/parse"
 )
 
-var tagTemplOrNewLine = parse.Any(parse.Rune('<'), parse.Rune('{'), parse.Rune('}'), parse.String("\r\n"), parse.Rune('\n'))
+var tagTemplOrNewLine = parse.Any(parse.Rune('<'), parse.Rune('@'), parse.Rune('{'), parse.Rune('}'), parse.String("\r\n"), parse.Rune('\n'))
 
 var textParser = parse.Func(func(pi *parse.Input) (n Node, ok bool, err error) {
 	from := pi.Position()
+
+	// Check for an at rune first to handle if the element expression parser did not find a valid templ element
+	// this is not the best implementation as it depends on the element expression parser always processing before this parser
+	hasAtRune := false
+	if _, hasAtRune, err = parse.Rune('@').Parse(pi); err != nil {
+		return
+	}
 
 	// Read until a tag or templ expression opens.
 	var t Text
 	if t.Value, ok, err = parse.StringUntil(tagTemplOrNewLine).Parse(pi); err != nil || !ok {
 		return
+	}
+	if hasAtRune {
+		t.Value = "@" + t.Value
 	}
 	if isWhitespace(t.Value) {
 		return t, false, nil

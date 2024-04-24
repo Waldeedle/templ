@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"strings"
+
 	"github.com/a-h/parse"
 	"github.com/a-h/templ/parser/v2/goexpression"
 )
@@ -17,6 +19,15 @@ func (p templElementExpressionParser) Parse(pi *parse.Input) (n Node, ok bool, e
 	// Parse the Go expression.
 	if r.Expression, err = parseGo("templ element", pi, goexpression.TemplExpression); err != nil {
 		return r, false, err
+	}
+
+	//if an element is not a function call, validate the matching element exists in the current function scope
+	//current implementation is naively checking if a matching templ component is passed in
+	if !strings.ContainsRune(r.Expression.Value, '(') && !strings.Contains(pi.RawString(), r.Expression.Value+" templ.Component") {
+		//reset the index to length of the parsed expression and account for the at rune
+		indexPriorToParse := pi.Index() - len(r.Expression.Value) - 1
+		pi.Seek(indexPriorToParse)
+		return nil, false, nil
 	}
 
 	// Once we've got a start expression, check to see if there's an open brace for children. {\n.

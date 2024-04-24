@@ -28,6 +28,20 @@ func TestTextParser(t *testing.T) {
 			},
 		},
 		{
+			name:  "Text ends at a possible templ element expression start",
+			input: `abcdef@test`,
+			expected: Text{
+				Value: "abcdef",
+			},
+		},
+		{
+			name:  "Text ends at a possible templ element expression start",
+			input: `abcdef@test`,
+			expected: Text{
+				Value: "abcdef",
+			},
+		},
+		{
 			name:  "Text may contain spaces",
 			input: `abcdef ghijk{%= "test" %}`,
 			expected: Text{
